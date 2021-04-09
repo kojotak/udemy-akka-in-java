@@ -7,8 +7,8 @@ public class AkkaBigPrimes {
 	public static void main(String[] args) {
 		//firstActorSystem();
 		
-		ActorSystem<String> actorManager = ActorSystem.create(ManagerBehavior.create(), "manager");
-		actorManager.tell("start");
+		ActorSystem<ManagerBehavior.Command> actorManager = ActorSystem.create(ManagerBehavior.create(), "manager");
+		actorManager.tell(new ManagerBehavior.InstructionCommand("start"));
 	}
 
 	private static void firstActorSystem() {
