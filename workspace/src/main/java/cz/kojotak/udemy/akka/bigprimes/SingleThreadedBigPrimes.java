@@ -6,6 +6,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 public class SingleThreadedBigPrimes {
+	
+	public static final int LIMIT = 20;
 
 	public static void main(String...args) {
 		
@@ -13,7 +15,7 @@ public class SingleThreadedBigPrimes {
 		
 		SortedSet<BigInteger> set = new TreeSet<>();
 		
-		while(set.size() < 20) {
+		while(set.size() < LIMIT) {
 			BigInteger bigInteger = new BigInteger(2000, new Random());
 			BigInteger prime = bigInteger.nextProbablePrime();
 			set.add(prime);

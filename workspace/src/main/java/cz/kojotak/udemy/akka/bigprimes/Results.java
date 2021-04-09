@@ -8,8 +8,21 @@ public class Results {
 
 	private final SortedSet<BigInteger> primes = new TreeSet<>();
 
-	public SortedSet<BigInteger> getPrimes() {
-		return primes;
+	public int getSize() {
+		synchronized (primes) {
+			return primes.size();
+		}
 	}
 	
+	public void addPrime(BigInteger bi) {
+		synchronized(primes) {
+			primes.add(bi);
+		}
+	}
+	
+	public void print() {
+		synchronized(primes) {
+			primes.forEach(System.out::println);
+		}
+	}
 }

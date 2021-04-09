@@ -16,8 +16,8 @@ public class PrimeGenerator implements Runnable {
 	public void run() {
 		BigInteger bigInteger = new BigInteger(2000, new Random());
 		BigInteger prime = bigInteger.nextProbablePrime();
-		results.getPrimes().add(prime);
-		System.out.println("finished " + results.getPrimes().size());
+		results.addPrime(prime);
+		System.out.println("finished " + results.getSize());
 	}
 
 }
