@@ -44,14 +44,21 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 		return Behaviors.setup(WorkerBehavior::new);
 	}
 	
+	private BigInteger prime;
+	
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
 				.onAnyMessage(command ->{
 					if(command.getMsg().equals("start")) {
-						BigInteger bi = new BigInteger(2000, new Random());
-						command.getSender().tell(new ManagerBehavior.ResultCommand(bi));
-						System.out.println(getContext().getSelf().path() + ", next: " + bi.nextProbablePrime());
+						if(prime==null) {
+							BigInteger bi = new BigInteger(2000, new Random());
+							prime = bi.nextProbablePrime();
+						} else {
+							System.err.println("already computed...");
+						}
+						command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
+						System.out.println(getContext().getSelf().path() + ", next: " + prime);
 					}
 					return this;
 				})
