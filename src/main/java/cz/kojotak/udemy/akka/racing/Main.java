@@ -33,14 +33,14 @@ public class Main {
 		ExecutorService threadPool = Executors.newFixedThreadPool(RACERS);
 		
 		for (int i = 0; i <RACERS; i++) {
-			Racer h = new Racer(i,raceLength, currentPositions, results);
+			JavaRacer h = new JavaRacer(i,raceLength, currentPositions, results);
 			currentPositions.put(i, 0);
 			threadPool.execute(h);
 		}
 		
 		boolean finished = false;
 		while (!finished) {
-			Thread.sleep(1000);
+			Thread.sleep(1000);//never do Thread.sleep in Akka!
 			displayRace(currentPositions);
 			finished = results.size() == RACERS;
 		}

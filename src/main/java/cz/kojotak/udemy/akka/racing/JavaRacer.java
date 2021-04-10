@@ -3,7 +3,7 @@ package cz.kojotak.udemy.akka.racing;
 import java.util.Map;
 import java.util.Random;
 
-public class Racer implements Runnable{
+public class JavaRacer implements Runnable{
 
 	private int id; // 0..9
 	
@@ -21,7 +21,7 @@ public class Racer implements Runnable{
 	private double currentPosition = 0;
 	
 	
-	public Racer(int id, int raceLength, Map<Integer, Integer> currentPositions, Map<Integer, Long> results) {
+	public JavaRacer(int id, int raceLength, Map<Integer, Integer> currentPositions, Map<Integer, Long> results) {
 		this.id = id;
 		this.raceLength = raceLength;
 		this.currentPositions = currentPositions;
