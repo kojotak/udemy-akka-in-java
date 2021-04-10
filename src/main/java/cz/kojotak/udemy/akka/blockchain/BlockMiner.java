@@ -1,4 +1,4 @@
-package cz.kojotak.udemy.akka.blockchain.multiThreadedExample;
+package cz.kojotak.udemy.akka.blockchain;
 
 import cz.kojotak.udemy.akka.blockchain.model.Block;
 import cz.kojotak.udemy.akka.blockchain.model.HashResult;
