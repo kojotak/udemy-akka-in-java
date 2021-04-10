@@ -90,8 +90,12 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 	public Receive<Command> completed(int raceLength){
 		return newReceiveBuilder()
 				.onMessage(PositionCommand.class, msg ->{
-					msg.getController().tell(new RaceController.RacerUpdate(getContext().getSelf(), raceLength));
-					return Behaviors.same();
+					msg.getController().tell(new RaceController.RacerUpdate(getContext().getSelf(), raceLength) );
+					msg.getController().tell(new RaceController.RacerFinished(getContext().getSelf()) );
+					
+					//return Behaviors.same(); //tohle ponecha bezet zavod i kdyz bude na konci
+					//return Behaviors.stopped(); //tohle by vedle k chybe s poslanim dead letter
+					return Behaviors.ignore();//elegantni trik jak dal poslouchat, ale dal nic nedelat v idle stavu
 				})
 				.build();
 	}

@@ -17,37 +17,27 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command >{
 	public static interface Command extends Serializable { 	}
 
 	public static class InstructionCommand implements Command {
-
 		private static final long serialVersionUID = 1L;
-
 		private final String msg;
-
 		public InstructionCommand(String msg) {
 			super();
 			this.msg = msg;
 		}
-
 		public String getMsg() {
 			return msg;
 		}
-		
 	}
 	
 	public static class ResultCommand implements Command {
-
 		private static final long serialVersionUID = 1L;
-
 		private final BigInteger prime;
-
 		public ResultCommand(BigInteger prime) {
 			super();
 			this.prime = prime;
 		}
-
 		public BigInteger getPrime() {
 			return prime;
 		}
-		
 	}
 	
 	private ManagerBehavior(ActorContext<Command> context) {
