@@ -106,7 +106,7 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 		return newReceiveBuilder()
 				.onAnyMessage(msg -> Behaviors.same() )
 				.onSignal(PostStop.class, signal ->{
-					System.out.println("i am about to terminate...");
+					getContext().getLog().info("i am about to terminate...");
 					return Behaviors.same();
 				})
 				.build();
