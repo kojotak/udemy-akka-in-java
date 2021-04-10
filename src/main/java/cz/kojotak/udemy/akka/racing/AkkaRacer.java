@@ -5,6 +5,7 @@ import java.util.Random;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.PostStop;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Receive;
@@ -95,7 +96,18 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 					
 					//return Behaviors.same(); //tohle ponecha bezet zavod i kdyz bude na konci
 					//return Behaviors.stopped(); //tohle by vedle k chybe s poslanim dead letter
-					return Behaviors.ignore();//elegantni trik jak dal poslouchat, ale dal nic nedelat v idle stavu
+					//return Behaviors.ignore();//elegantni trik jak dal poslouchat, ale dal nic nedelat v idle stavu
+					return waitingToStop();//
+				})
+				.build();
+	}
+	
+	public Receive<Command> waitingToStop(){
+		return newReceiveBuilder()
+				.onAnyMessage(msg -> Behaviors.same() )
+				.onSignal(PostStop.class, signal ->{
+					System.out.println("i am about to terminate...");
+					return Behaviors.same();
 				})
 				.build();
 	}
