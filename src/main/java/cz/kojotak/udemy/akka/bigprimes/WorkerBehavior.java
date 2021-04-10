@@ -44,30 +44,31 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 		return Behaviors.setup(WorkerBehavior::new);
 	}
 	
-	private BigInteger prime;
-	
 	@Override
 	public Receive<Command> createReceive() {
+		return handleMessageWithoutPrimeNumber();
+	}
+	
+	public Receive<Command> handleMessageWithoutPrimeNumber() {
 		return newReceiveBuilder()
 				.onAnyMessage(command ->{
-					if(command.getMsg().equals("start")) {
-						BigInteger bi = new BigInteger(2000, new Random());
-						prime = bi.nextProbablePrime();
-						command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
-						System.out.println(getContext().getSelf().path() + ", next: " + prime);
-					}
-					return subsequentHandler();
+					BigInteger bi = new BigInteger(2000, new Random());
+					BigInteger prime = bi.nextProbablePrime();
+					command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
+					System.out.println(getContext().getSelf().path() + ", next: " + prime);
+					//doporuceni - nemit ve tride zadny stav ani prepinac,
+					//ale misto toho zmenit chovani
+					return handleMessageWithPrimeNumber(prime);
 				})
 				.build();
 	}
 	
-	public Receive<Command> subsequentHandler(){
+	public Receive<Command> handleMessageWithPrimeNumber(BigInteger prime){
 		return newReceiveBuilder()
 				.onAnyMessage(command ->{
 					if(command.getMsg().equals("start")) {
-						System.err.println("already computed...");
+						System.out.println(getContext().getSelf().path() + " already computed...");
 						command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
-						System.out.println(getContext().getSelf().path() + ", next: " + prime);
 					}
 					return Behaviors.same();
 				})
