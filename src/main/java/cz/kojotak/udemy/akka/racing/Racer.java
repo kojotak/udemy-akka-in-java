@@ -5,9 +5,11 @@ import java.util.Random;
 
 public class Racer implements Runnable{
 
-	private int id;
+	private int id; // 0..9
 	
-	private int raceLength;
+	private int raceLength; //100 ~ 20-30s
+	
+	//shared state - not the best idea though...
 	private Map<Integer, Integer> currentPositions;
 	private Map<Integer, Long> results;
 
@@ -25,7 +27,7 @@ public class Racer implements Runnable{
 		this.currentPositions = currentPositions;
 		this.results = results;
 		random = new Random();
-		averageSpeedAdjustmentFactor = random.nextInt(30) - 10;
+		averageSpeedAdjustmentFactor = random.nextInt(30) - 10; //-10..+20
 	}
 	
 	private double getMaxSpeed() {

@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 
 public class Main {
 
+	private static final int RACERS = 10;
 	static int raceLength = 100;
 	static int displayLength = 160;
 	static long start;
@@ -15,7 +16,7 @@ public class Main {
 		for (int i = 0; i < 50; ++i) System.out.println();
 		System.out.println("Race has been running for " + ((System.currentTimeMillis() - start) / 1000) + " seconds.");
 		System.out.println("    " + new String (new char[displayLength]).replace('\0', '='));
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < RACERS; i++) {
 			System.out.println(i + " : "  + new String (new char[currentPositions.get(i) * displayLength / 100]).replace('\0', '*'));
 		}
 	}
@@ -23,14 +24,15 @@ public class Main {
 
 	public static void main(String[] args) throws InterruptedException {
 		
+		//ConcurrentHashMap = thread safe
 		Map<Integer, Integer> currentPositions = new ConcurrentHashMap<Integer, Integer>(); 
 		Map<Integer, Long> results = new ConcurrentHashMap<Integer, Long>();
 		
 		start = System.currentTimeMillis();
 		
-		ExecutorService threadPool = Executors.newFixedThreadPool(10);
+		ExecutorService threadPool = Executors.newFixedThreadPool(RACERS);
 		
-		for (int i = 0; i <10; i++) {
+		for (int i = 0; i <RACERS; i++) {
 			Racer h = new Racer(i,raceLength, currentPositions, results);
 			currentPositions.put(i, 0);
 			threadPool.execute(h);
@@ -40,7 +42,7 @@ public class Main {
 		while (!finished) {
 			Thread.sleep(1000);
 			displayRace(currentPositions);
-			finished = results.size() == 10;
+			finished = results.size() == RACERS;
 		}
 		
 		threadPool.shutdownNow();
