@@ -28,7 +28,7 @@ public class BlockChainUtils {
 		} 
 	}
 		
-		
+	//only for java, will be duplicated in WorkerBehavior	
 	public static HashResult mineBlock(Block block, int difficultyLevel, int startNonce, int endNonce) {
 		String hash = new String(new char[difficultyLevel]).replace("\0", "X");
 		String target = new String(new char[difficultyLevel]).replace("\0", "0");
