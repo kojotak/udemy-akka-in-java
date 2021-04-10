@@ -41,7 +41,7 @@ public class RaceController extends AbstractBehavior<RaceController.Command>{
 		private static final long serialVersionUID = 1L;
 	}
 
-	private RaceController(ActorContext context) {
+	private RaceController(ActorContext<Command> context) {
 		super(context);
 	}
 	
@@ -55,35 +55,41 @@ public class RaceController extends AbstractBehavior<RaceController.Command>{
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-				.onMessage(StartCommand.class, msg->{
-					start = System.currentTimeMillis();
-					currentPositions = new HashMap<>();
-					for(int i = 0; i<10; i++) {
-						ActorRef<AkkaRacer.Command> racer = getContext().spawn(AkkaRacer.create(), "racer"+i);
-						currentPositions.put(racer,0);
-						racer.tell(new AkkaRacer.StartCommand(JavaMain.raceLength));
-					}
-					
-					//chci periodicky kontrolovat stav
-					//proto nastartuju timer, ktery periodicky posle zpravu s dotazem na stav
-					//toto je nahrada Thread.sleep v JavaRaceru
-					return Behaviors.withTimers(timer -> {
-						timer.startTimerAtFixedRate(TIMER_KEY, new GetPosition(), Duration.ofSeconds(1) );
-						return this;
-					});
-				})
-				.onMessage(GetPosition.class, msg->{
-					for(ActorRef<AkkaRacer.Command> racer : currentPositions.keySet()) {
-						racer.tell(new AkkaRacer.PositionCommand(getContext().getSelf()));
-						displayRace();
-					}
-					return this;
-				})
-				.onMessage(RacerUpdate.class, msg->{
-					currentPositions.put(msg.getRacer(), msg.getPosition());
-					return this;
-				})
+				.onMessage(StartCommand.class, this::onStartCommand)
+				.onMessage(GetPosition.class, this::onPositionCommand)
+				.onMessage(RacerUpdate.class, this::onRacerUpdate)
 				.build();
+	}
+	
+	private Behavior<Command> onRacerUpdate(RacerUpdate msg){
+		currentPositions.put(msg.getRacer(), msg.getPosition());
+		return this;
+	}
+	
+	private Behavior<Command> onPositionCommand(GetPosition msg){
+		for(ActorRef<AkkaRacer.Command> racer : currentPositions.keySet()) {
+			racer.tell(new AkkaRacer.PositionCommand(getContext().getSelf()));
+			displayRace();
+		}
+		return this;
+	}
+	
+	private Behavior<Command> onStartCommand(StartCommand msg){
+		start = System.currentTimeMillis();
+		currentPositions = new HashMap<>();
+		for(int i = 0; i<10; i++) {
+			ActorRef<AkkaRacer.Command> racer = getContext().spawn(AkkaRacer.create(), "racer"+i);
+			currentPositions.put(racer,0);
+			racer.tell(new AkkaRacer.StartCommand(JavaMain.raceLength));
+		}
+		
+		//chci periodicky kontrolovat stav
+		//proto nastartuju timer, ktery periodicky posle zpravu s dotazem na stav
+		//toto je nahrada Thread.sleep v JavaRaceru
+		return Behaviors.withTimers(timer -> {
+			timer.startTimerAtFixedRate(TIMER_KEY, new GetPosition(), Duration.ofSeconds(1) );
+			return this;
+		});
 	}
 	
 	//almost copy paste from Main.java

@@ -49,24 +49,28 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-				.onMessage(StartCommand.class, msg->{
-					this.raceLength = msg.getRaceLength();
-					this.random = new Random();
-					this.averageSpeedAdjustmentFactor = random.nextInt(30) - 10; //-10..+20
-					return this;
-				})
-				.onMessage(PositionCommand.class, msg->{
-					determineNextSpeed();
-					currentPosition += getDistanceMovedPerSecond();
-					if (currentPosition > raceLength )
-						currentPosition  = raceLength;
-					
-					//old java version -> we have to send message about current position instead
-					//currentPositions.put(id, (int)currentPosition);
-					msg.getController().tell(new RaceController.RacerUpdate(getContext().getSelf(), (int)currentPosition));
-					return this;
-				})
+				.onMessage(StartCommand.class, this::onStartCommand)
+				.onMessage(PositionCommand.class, this::onPositionCommand)
 				.build();
+	}
+	
+	private Behavior<Command> onPositionCommand(PositionCommand msg){
+		determineNextSpeed();
+		currentPosition += getDistanceMovedPerSecond();
+		if (currentPosition > raceLength )
+			currentPosition  = raceLength;
+		
+		//old java version -> we have to send message about current position instead
+		//currentPositions.put(id, (int)currentPosition);
+		msg.getController().tell(new RaceController.RacerUpdate(getContext().getSelf(), (int)currentPosition));
+		return this;
+	}
+	
+	private Behavior<Command> onStartCommand(StartCommand msg){
+		this.raceLength = msg.getRaceLength();
+		this.random = new Random();
+		this.averageSpeedAdjustmentFactor = random.nextInt(30) - 10; //-10..+20
+		return this;
 	}
 	
 	//below ... copy-paste from JavaRacer
@@ -105,6 +109,5 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 			currentSpeed = getMaxSpeed() / 2;
 		}
 	}
-
 	
 }
