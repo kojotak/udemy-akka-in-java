@@ -5,11 +5,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Main {
+public class JavaMain {
 
-	private static final int RACERS = 10;
-	static int raceLength = 100;
-	static int displayLength = 160;
+	public static final int RACERS = 10;
+	public static int raceLength = 100;
+	public static int displayLength = 160;
 	static long start;
 	
 	private static void displayRace(Map<Integer, Integer> currentPositions) {

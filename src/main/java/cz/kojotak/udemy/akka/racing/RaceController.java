@@ -1,6 +1,7 @@
 package cz.kojotak.udemy.akka.racing;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +36,10 @@ public class RaceController extends AbstractBehavior<RaceController.Command>{
 			return position;
 		}
 	}
+	
+	private class GetPosition implements Command {
+		private static final long serialVersionUID = 1L;
+	}
 
 	private RaceController(ActorContext context) {
 		super(context);
@@ -46,7 +51,7 @@ public class RaceController extends AbstractBehavior<RaceController.Command>{
 	
 	private Map<ActorRef<AkkaRacer.Command>, Integer> currentPositions;
 	private long start;
-	private int raceLength = 100;
+	private Object TIMER_KEY;
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
@@ -56,7 +61,21 @@ public class RaceController extends AbstractBehavior<RaceController.Command>{
 					for(int i = 0; i<10; i++) {
 						ActorRef<AkkaRacer.Command> racer = getContext().spawn(AkkaRacer.create(), "racer"+i);
 						currentPositions.put(racer,0);
-						racer.tell(new AkkaRacer.StartCommand(raceLength));
+						racer.tell(new AkkaRacer.StartCommand(JavaMain.raceLength));
+					}
+					
+					//chci periodicky kontrolovat stav
+					//proto nastartuju timer, ktery periodicky posle zpravu s dotazem na stav
+					//toto je nahrada Thread.sleep v JavaRaceru
+					return Behaviors.withTimers(timer -> {
+						timer.startTimerAtFixedRate(TIMER_KEY, new GetPosition(), Duration.ofSeconds(1) );
+						return this;
+					});
+				})
+				.onMessage(GetPosition.class, msg->{
+					for(ActorRef<AkkaRacer.Command> racer : currentPositions.keySet()) {
+						racer.tell(new AkkaRacer.PositionCommand(getContext().getSelf()));
+						displayRace();
 					}
 					return this;
 				})
@@ -65,6 +84,18 @@ public class RaceController extends AbstractBehavior<RaceController.Command>{
 					return this;
 				})
 				.build();
+	}
+	
+	//almost copy paste from Main.java
+	private void displayRace() {
+		for (int i = 0; i < 50; ++i) System.out.println();
+		System.out.println("Race has been running for " + ((System.currentTimeMillis() - start) / 1000) + " seconds.");
+		System.out.println("    " + new String (new char[JavaMain.displayLength]).replace('\0', '='));
+		int i = 0;
+		for (ActorRef<AkkaRacer.Command> racer : currentPositions.keySet()) {
+			System.out.println(i + " : "  + new String (new char[currentPositions.get(racer) * JavaMain.displayLength / 100]).replace('\0', '*'));
+			i++;
+		}
 	}
 	
 }
