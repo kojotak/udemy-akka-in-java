@@ -51,16 +51,25 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 		return newReceiveBuilder()
 				.onAnyMessage(command ->{
 					if(command.getMsg().equals("start")) {
-						if(prime==null) {
-							BigInteger bi = new BigInteger(2000, new Random());
-							prime = bi.nextProbablePrime();
-						} else {
-							System.err.println("already computed...");
-						}
+						BigInteger bi = new BigInteger(2000, new Random());
+						prime = bi.nextProbablePrime();
 						command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
 						System.out.println(getContext().getSelf().path() + ", next: " + prime);
 					}
-					return this;
+					return subsequentHandler();
+				})
+				.build();
+	}
+	
+	public Receive<Command> subsequentHandler(){
+		return newReceiveBuilder()
+				.onAnyMessage(command ->{
+					if(command.getMsg().equals("start")) {
+						System.err.println("already computed...");
+						command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
+						System.out.println(getContext().getSelf().path() + ", next: " + prime);
+					}
+					return Behaviors.same();
 				})
 				.build();
 	}

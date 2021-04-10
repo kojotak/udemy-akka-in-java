@@ -52,10 +52,11 @@ public class RaceController extends AbstractBehavior<RaceController.Command>{
 	private Map<ActorRef<AkkaRacer.Command>, Integer> currentPositions;
 	private long start;
 	private Object TIMER_KEY;
+	
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-				.onMessage(StartCommand.class, this::onStartCommand)
+				.onMessage(StartCommand.class,this::onStartCommand)
 				.onMessage(GetPosition.class, this::onPositionCommand)
 				.onMessage(RacerUpdate.class, this::onRacerUpdate)
 				.build();
