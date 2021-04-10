@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.event.Level;
 
 import akka.actor.testkit.typed.CapturedLogEvent;
 import akka.actor.testkit.typed.javadsl.BehaviorTestKit;
@@ -30,41 +31,86 @@ class MiningTest {
 		assertEquals("DEBUG", logMessages.get(0).level().name());
 	}
 	
-	@Test
-	void testMiningPassesIfNonceIsInRange() {
-		BehaviorTestKit<Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
-		Block block = BlocksData.getNextBlock(0, "0");
-		TestInbox<HashResult> testInbox = TestInbox.create();
-		Command msg = new WorkerBehavior.Command(block, 82700, 5, testInbox.getRef());
-		testActor.run(msg);
-		List<CapturedLogEvent> logMessages = testActor.getAllLogEntries();
-		assertEquals(1, logMessages.size());
-		String expected = "82741 : 0000081e9d118bf0827bed8f4a3e142a99a42ef29c8c3d3e24ae2592456c440b";  
-		assertEquals(expected, logMessages.get(0).message());
-		assertEquals("DEBUG", logMessages.get(0).level().name());
-	}
-	
-	@Test
-	void testMessageReceivedIfNonceInRange() {
-		BehaviorTestKit<Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
-		Block block = BlocksData.getNextBlock(0, "0");
-		TestInbox<HashResult> testInbox = TestInbox.create();
-		Command msg = new WorkerBehavior.Command(block, 82700, 5, testInbox.getRef());
-		testActor.run(msg);
-		HashResult expected = new HashResult();
-		expected.foundAHash("0000081e9d118bf0827bed8f4a3e142a99a42ef29c8c3d3e24ae2592456c440b", 82741);
-		testInbox.expectMessage(expected);
-		
-	}
-
-	@Test
-	void testNoMessageReceivedIfNonceNotInRange() {
-		BehaviorTestKit<Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
-		Block block = BlocksData.getNextBlock(0, "0");
-		TestInbox<HashResult> testInbox = TestInbox.create();
-		Command msg = new WorkerBehavior.Command(block, 42, 5, testInbox.getRef());
-		testActor.run(msg);
-		assertFalse(testInbox.hasMessages());
-	}
+    /**
+     * It should not pass, because our first valid nonce, for the first block, having a difficulty of 3 is 2147
+     * And because we are giving nonce range insufficient (0-1_000), the test of course should fail.
+     */
+    @Test
+    void testMiningFailsIfNonceNotInRange() {
+        BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
+        Block block = BlocksData.getNextBlock(0, "0");
+ 
+        TestInbox<HashResult> testInbox = TestInbox.create();
+ 
+        int startNonce = 0;
+        int difficulty = 3;
+ 
+        WorkerBehavior.Command message = new WorkerBehavior.Command(block, startNonce, difficulty, testInbox.getRef());
+        testActor.run(message);
+        List<CapturedLogEvent> logMessages = testActor.getAllLogEntries();
+        assertEquals(1, logMessages.size());
+        assertEquals("null", logMessages.get(0).message());
+        assertEquals(Level.DEBUG, logMessages.get(0).level());
+    }
+ 
+    /**
+     * Here the nonce range is between 2_000 - 3_000, and the test should pass, because our Actor, will be able to find
+     * in this range, a valid nonce value, what is 2147, for this level of difficulty.
+     */
+    @Test
+    void testMiningPassesIfNonceIsInRange() {
+        BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
+        Block block = BlocksData.getNextBlock(0, "0");
+ 
+        TestInbox<HashResult> testInbox = TestInbox.create();
+ 
+        int startNonce = 2_000;
+        int difficulty = 3;
+ 
+        WorkerBehavior.Command message = new WorkerBehavior.Command(block, startNonce, difficulty, testInbox.getRef());
+        testActor.run(message);
+ 
+        List<CapturedLogEvent> logMessages = testActor.getAllLogEntries();
+        assertEquals(logMessages.size(), 1);
+ 
+        String expectedResult = "2147 : 00003d81cb2882f5c6bc14248b356ba17b37c7cb0c3fdf4256f885ade10c373b";
+        assertEquals(expectedResult, logMessages.get(0).message());
+        assertEquals(Level.DEBUG, logMessages.get(0).level());
+    }
+ 
+    @Test
+    void testMessageReceivedIfNonceInRange() {
+        BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
+        Block block = BlocksData.getNextBlock(0, "0");
+ 
+        TestInbox<HashResult> testInbox = TestInbox.create();
+ 
+        int startNonce = 2_000;
+        int difficulty = 3;
+ 
+        WorkerBehavior.Command message = new WorkerBehavior.Command(block, startNonce, difficulty, testInbox.getRef());
+        testActor.run(message);
+ 
+        HashResult expectedHashResult = new HashResult();
+        expectedHashResult.foundAHash("00003d81cb2882f5c6bc14248b356ba17b37c7cb0c3fdf4256f885ade10c373b", 2147);
+ 
+        testInbox.expectMessage(expectedHashResult);
+    }
+ 
+    @Test
+    void testNoMessageReceivedIfNonceNotInRange() {
+        BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
+        Block block = BlocksData.getNextBlock(0, "0");
+ 
+        TestInbox<HashResult> testInbox = TestInbox.create();
+ 
+        int startNonce = 0;
+        int difficulty = 3;
+ 
+        WorkerBehavior.Command message = new WorkerBehavior.Command(block, startNonce, difficulty, testInbox.getRef());
+        testActor.run(message);
+ 
+        assertFalse(testInbox.hasMessages());
+    }
 
 }
