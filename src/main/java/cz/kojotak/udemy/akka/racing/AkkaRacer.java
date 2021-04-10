@@ -54,9 +54,9 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 	public Receive<Command> notYetStarted(){
 		return newReceiveBuilder()
 				.onMessage(StartCommand.class, msg ->{
-					this.random = new Random();
+					Random random = new Random();
 					this.averageSpeedAdjustmentFactor = random.nextInt(30) - 10; //-10..+20
-					return running(msg.getRaceLength(), 0);
+					return running(msg.getRaceLength(), 0, random);
 				})
 				.onMessage(PositionCommand.class, msg ->{
 					msg.getController().tell(new RaceController.RacerUpdate(getContext().getSelf(), 0));
@@ -65,10 +65,10 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 				.build();
 	}
 	
-	public Receive<Command> running(int raceLength, int currentPosition){
+	public Receive<Command> running(int raceLength, int currentPosition, Random random){
 		return newReceiveBuilder()
 				.onMessage(PositionCommand.class, msg -> {
-					determineNextSpeed(raceLength, currentPosition);
+					determineNextSpeed(raceLength, currentPosition, random);
 					int newPosition = currentPosition;
 					newPosition += getDistanceMovedPerSecond();
 					if (newPosition > raceLength )
@@ -81,7 +81,7 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 					if(newPosition == raceLength) {
 						return completed(raceLength);
 					} else {
-						return running(raceLength, newPosition);
+						return running(raceLength, newPosition, random);
 					}					
 				})
 				.build();
@@ -100,7 +100,6 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 	
 	private final double defaultAverageSpeed = 48.2;
 	private int averageSpeedAdjustmentFactor;
-	private Random random;	
 	private double currentSpeed = 0;
 	
 	private double getMaxSpeed() {
@@ -111,7 +110,7 @@ public class AkkaRacer extends AbstractBehavior<AkkaRacer.Command>{
 		return currentSpeed * 1000 / 3600;
 	}
 	
-	private void determineNextSpeed(int currentPosition, int raceLength) {
+	private void determineNextSpeed(int currentPosition, int raceLength, Random random) {
 		if (currentPosition < (raceLength / 4)) {
 			currentSpeed = currentSpeed  + (((getMaxSpeed() - currentSpeed) / 10) * random.nextDouble());
 		}
