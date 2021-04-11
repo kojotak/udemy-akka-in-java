@@ -54,8 +54,10 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 				.onAnyMessage(command ->{
 					BigInteger bi = new BigInteger(2000, new Random());
 					BigInteger prime = bi.nextProbablePrime();
-					command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
-					System.out.println(getContext().getSelf().path() + ", next: " + prime);
+					Random r = new Random();
+					if(r.nextInt(5) < 2 ) {
+						command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
+					}
 					//doporuceni - nemit ve tride zadny stav ani prepinac,
 					//ale misto toho zmenit chovani
 					return handleMessageWithPrimeNumber(prime);
@@ -66,9 +68,12 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 	public Receive<Command> handleMessageWithPrimeNumber(BigInteger prime){
 		return newReceiveBuilder()
 				.onAnyMessage(command ->{
-					if(command.getMsg().equals("start")) {
-						System.out.println(getContext().getSelf().path() + " already computed...");
-						command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
+					Random r = new Random();
+					if(r.nextInt(5) < 2) {
+						if(command.getMsg().equals("start")) {
+							System.out.println(getContext().getSelf().path() + " already computed...");
+							command.getSender().tell(new ManagerBehavior.ResultCommand(prime));
+						}
 					}
 					return Behaviors.same();
 				})
