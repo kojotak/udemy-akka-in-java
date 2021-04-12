@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -78,6 +79,7 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
 				.onSignal(Terminated.class, handler->{
+					startNextWorker();
 					return Behaviors.same();
 				})
 				.onMessage(MineBlockCommand.class, msg->{
@@ -98,7 +100,12 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 	private int currentNonce = 0;
 	
 	private void startNextWorker() {
-		ActorRef<WorkerBehavior.Command> worker = getContext().spawn(WorkerBehavior.create(), "worker"+currentNonce);
+		System.out.println("about to start mining with nonces starting at " + currentNonce);
+
+		Behavior<WorkerBehavior.Command> workerBehavior = Behaviors.supervise(WorkerBehavior.create())
+				.onFailure(SupervisorStrategy.restart());
+		
+		ActorRef<WorkerBehavior.Command> worker = getContext().spawn(workerBehavior, "worker"+currentNonce);
 		getContext().watch(worker);
 		worker.tell(new WorkerBehavior.Command(block, currentNonce*1000, difficulty, getContext().getSelf()));
 		currentNonce++;

@@ -1,5 +1,7 @@
 package cz.kojotak.udemy.akka.blockchain;
 
+import java.util.Random;
+
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
@@ -69,6 +71,10 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 					}
 					else {
 						getContext().getLog().debug("null");
+//						Random r = new Random();
+//						if(r.nextInt() > 3) {//simulate failure
+//							throw new ArithmeticException("no hash found");
+//						}
 						return Behaviors.stopped();
 					}
 				})
