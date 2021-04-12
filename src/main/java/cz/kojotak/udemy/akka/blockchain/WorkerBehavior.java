@@ -69,7 +69,7 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 					}
 					else {
 						getContext().getLog().debug("null");
-						return Behaviors.same();
+						return Behaviors.stopped();
 					}
 				})
 				.build();

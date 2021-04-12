@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Receive;
@@ -76,6 +77,9 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
+				.onSignal(Terminated.class, handler->{
+					return Behaviors.same();
+				})
 				.onMessage(MineBlockCommand.class, msg->{
 					this.sender = msg.getSender();
 					this.block = msg.getBlock();
@@ -95,6 +99,7 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 	
 	private void startNextWorker() {
 		ActorRef<WorkerBehavior.Command> worker = getContext().spawn(WorkerBehavior.create(), "worker"+currentNonce);
+		getContext().watch(worker);
 		worker.tell(new WorkerBehavior.Command(block, currentNonce*1000, difficulty, getContext().getSelf()));
 		currentNonce++;
 	}
