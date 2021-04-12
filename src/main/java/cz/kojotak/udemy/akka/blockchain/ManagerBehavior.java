@@ -9,14 +9,16 @@ import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import cz.kojotak.udemy.akka.blockchain.ManagerBehavior.Command;
+import akka.actor.typed.javadsl.StashBuffer;
 import cz.kojotak.udemy.akka.blockchain.model.Block;
 import cz.kojotak.udemy.akka.blockchain.model.HashResult;
-import akka.actor.typed.javadsl.Behaviors;
 
 public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 
+	private StashBuffer<Command> stashBuffer;
+	
 	public interface Command extends Serializable {}
 
 	public static class MineBlockCommand implements Command {
@@ -68,12 +70,17 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 		}
 	}
 	
-	private ManagerBehavior (ActorContext<Command> context) {
+	private ManagerBehavior (ActorContext<Command> context, StashBuffer<Command> stashBuffer) {
 		super(context);
+		this.stashBuffer = stashBuffer;
 	}
 	
 	public static Behavior<Command>  create(){
-		return Behaviors.setup(ManagerBehavior::new);
+		return Behaviors.withStash(10, stash->{
+					return Behaviors.setup(ctx -> {
+						return new ManagerBehavior(ctx, stash);
+					});
+				});
 	}
 	
 	@Override
@@ -112,12 +119,20 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 						getContext().stop(child);
 					}
 					sender.tell(msg.getHashResult());
-					return iddleMessageHandler();
+					return stashBuffer.unstashAll(iddleMessageHandler());
 				})
 				.onMessage(MineBlockCommand.class, msg->{
 					//sending message to itself
 					System.out.println("delaying a mining request");
-					getContext().getSelf().tell(msg);
+					
+					//instead of this...
+					//getContext().getSelf().tell(msg);
+					
+					if(!stashBuffer.isFull()) {
+						//will use a stash
+						stashBuffer.stash(msg);
+					}
+					
 					return Behaviors.same();
 				})
 				.build();
