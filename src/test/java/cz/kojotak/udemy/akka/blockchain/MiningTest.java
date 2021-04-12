@@ -1,6 +1,7 @@
 package cz.kojotak.udemy.akka.blockchain;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.List;
 
@@ -10,19 +11,20 @@ import org.slf4j.event.Level;
 import akka.actor.testkit.typed.CapturedLogEvent;
 import akka.actor.testkit.typed.javadsl.BehaviorTestKit;
 import akka.actor.testkit.typed.javadsl.TestInbox;
-import cz.kojotak.udemy.akka.blockchain.WorkerBehavior.Command;
-import cz.kojotak.udemy.akka.blockchain.model.Block;
-import cz.kojotak.udemy.akka.blockchain.model.HashResult;
-import cz.kojotak.udemy.akka.blockchain.utils.BlocksData;
+import cz.kojotak.udemy.akka.actors.blockchain.ManagerBehavior;
+import cz.kojotak.udemy.akka.actors.blockchain.WorkerBehavior;
+import cz.kojotak.udemy.akka.actors.blockchain.model.Block;
+import cz.kojotak.udemy.akka.actors.blockchain.model.HashResult;
+import cz.kojotak.udemy.akka.actors.blockchain.utils.BlocksData;
 
 class MiningTest {
 
 	@Test
 	void testSendMessage() {
-		BehaviorTestKit<Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
+		BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
 		Block block = BlocksData.getNextBlock(0, "0");
 		TestInbox<ManagerBehavior.Command> testInbox = TestInbox.create();
-		Command msg = new WorkerBehavior.Command(block, 0, 5, testInbox.getRef());
+		WorkerBehavior.Command msg = new WorkerBehavior.Command(block, 0, 5, testInbox.getRef());
 		testActor.run(msg);
 		//check result in log, that is in console...
 		List<CapturedLogEvent> logMessages = testActor.getAllLogEntries();
