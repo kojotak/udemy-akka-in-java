@@ -86,9 +86,18 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 					this.sender = msg.getSender();
 					this.block = msg.getBlock();
 					this.difficulty = msg.getDifficulty();
+					currentlyMining = true;
 					for(int i=0; i<10; i++) {
 						startNextWorker();
 					}
+					return Behaviors.same();
+				})
+				.onMessage(HashResultCommand.class, msg->{
+					currentlyMining = false;
+					for(ActorRef<Void> child : getContext().getChildren()) {
+						getContext().stop(child);
+					}
+					sender.tell(msg.getHashResult());
 					return Behaviors.same();
 				})
 				.build();
@@ -98,16 +107,19 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 	private Block block;
 	private int difficulty;
 	private int currentNonce = 0;
+	private boolean currentlyMining;
 	
 	private void startNextWorker() {
-		System.out.println("about to start mining with nonces starting at " + currentNonce);
-
-		Behavior<WorkerBehavior.Command> workerBehavior = Behaviors.supervise(WorkerBehavior.create())
-				.onFailure(SupervisorStrategy.restart());
+		if(currentlyMining) {
+			System.out.println("about to start mining with nonces starting at " + currentNonce);
 		
-		ActorRef<WorkerBehavior.Command> worker = getContext().spawn(workerBehavior, "worker"+currentNonce);
-		getContext().watch(worker);
-		worker.tell(new WorkerBehavior.Command(block, currentNonce*1000, difficulty, getContext().getSelf()));
-		currentNonce++;
+			Behavior<WorkerBehavior.Command> workerBehavior = Behaviors.supervise(WorkerBehavior.create())
+					.onFailure(SupervisorStrategy.restart());
+			
+			ActorRef<WorkerBehavior.Command> worker = getContext().spawn(workerBehavior, "worker"+currentNonce);
+			getContext().watch(worker);
+			worker.tell(new WorkerBehavior.Command(block, currentNonce*1000, difficulty, getContext().getSelf()));
+			currentNonce++;
+		}
 	}
 }
