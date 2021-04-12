@@ -21,7 +21,7 @@ class MiningTest {
 	void testSendMessage() {
 		BehaviorTestKit<Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
 		Block block = BlocksData.getNextBlock(0, "0");
-		TestInbox<HashResult> testInbox = TestInbox.create();
+		TestInbox<ManagerBehavior.Command> testInbox = TestInbox.create();
 		Command msg = new WorkerBehavior.Command(block, 0, 5, testInbox.getRef());
 		testActor.run(msg);
 		//check result in log, that is in console...
@@ -40,7 +40,7 @@ class MiningTest {
         BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
         Block block = BlocksData.getNextBlock(0, "0");
  
-        TestInbox<HashResult> testInbox = TestInbox.create();
+        TestInbox<ManagerBehavior.Command> testInbox = TestInbox.create();
  
         int startNonce = 0;
         int difficulty = 3;
@@ -62,7 +62,7 @@ class MiningTest {
         BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
         Block block = BlocksData.getNextBlock(0, "0");
  
-        TestInbox<HashResult> testInbox = TestInbox.create();
+        TestInbox<ManagerBehavior.Command> testInbox = TestInbox.create();
  
         int startNonce = 2_000;
         int difficulty = 3;
@@ -83,7 +83,7 @@ class MiningTest {
         BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
         Block block = BlocksData.getNextBlock(0, "0");
  
-        TestInbox<HashResult> testInbox = TestInbox.create();
+        TestInbox<ManagerBehavior.Command> testInbox = TestInbox.create();
  
         int startNonce = 2_000;
         int difficulty = 3;
@@ -94,7 +94,7 @@ class MiningTest {
         HashResult expectedHashResult = new HashResult();
         expectedHashResult.foundAHash("00003d81cb2882f5c6bc14248b356ba17b37c7cb0c3fdf4256f885ade10c373b", 2147);
  
-        testInbox.expectMessage(expectedHashResult);
+        testInbox.expectMessage(new ManagerBehavior.HashResultCommand(expectedHashResult));
     }
  
     @Test
@@ -102,7 +102,7 @@ class MiningTest {
         BehaviorTestKit<WorkerBehavior.Command> testActor = BehaviorTestKit.create(WorkerBehavior.create());
         Block block = BlocksData.getNextBlock(0, "0");
  
-        TestInbox<HashResult> testInbox = TestInbox.create();
+        TestInbox<ManagerBehavior.Command> testInbox = TestInbox.create();
  
         int startNonce = 0;
         int difficulty = 3;

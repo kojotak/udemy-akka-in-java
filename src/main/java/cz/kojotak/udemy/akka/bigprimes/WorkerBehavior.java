@@ -14,26 +14,20 @@ import akka.actor.typed.javadsl.Behaviors;
 public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 	
 	public static class Command implements Serializable {//serializable pro posilani z jednoho JVM do druheho
-
 		private static final long serialVersionUID = 1L;
-		
 		private final String msg;
 		private final ActorRef<ManagerBehavior.Command> sender;
-
 		public Command(String msg, ActorRef<ManagerBehavior.Command> sender) {
 			super();
 			this.msg = msg;
 			this.sender = sender;
 		}
-
 		public String getMsg() {
 			return msg;
 		}
-
 		public ActorRef<ManagerBehavior.Command> getSender() {
 			return sender;
 		}
-		
 	}
 
 	private WorkerBehavior(ActorContext<Command> context) {
