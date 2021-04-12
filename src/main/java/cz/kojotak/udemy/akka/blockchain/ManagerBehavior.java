@@ -10,6 +10,7 @@ import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Receive;
+import cz.kojotak.udemy.akka.blockchain.ManagerBehavior.Command;
 import cz.kojotak.udemy.akka.blockchain.model.Block;
 import cz.kojotak.udemy.akka.blockchain.model.HashResult;
 import akka.actor.typed.javadsl.Behaviors;
@@ -74,12 +75,16 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 	public static Behavior<Command>  create(){
 		return Behaviors.setup(ManagerBehavior::new);
 	}
-
+	
 	@Override
 	public Receive<Command> createReceive() {
+		return iddleMessageHandler();
+	}
+
+	public Receive<Command> iddleMessageHandler() {
 		return newReceiveBuilder()
 				.onSignal(Terminated.class, handler->{
-					startNextWorker();
+					//ignoring, avoids death packt exception
 					return Behaviors.same();
 				})
 				.onMessage(MineBlockCommand.class, msg->{
@@ -90,6 +95,15 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 					for(int i=0; i<10; i++) {
 						startNextWorker();
 					}
+					return activeMessageHandler();
+				})
+				.build();
+	}
+	
+	public Receive<Command> activeMessageHandler(){
+		return newReceiveBuilder()
+				.onSignal(Terminated.class, handler->{
+					startNextWorker();
 					return Behaviors.same();
 				})
 				.onMessage(HashResultCommand.class, msg->{
@@ -98,6 +112,12 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
 						getContext().stop(child);
 					}
 					sender.tell(msg.getHashResult());
+					return iddleMessageHandler();
+				})
+				.onMessage(MineBlockCommand.class, msg->{
+					//sending message to itself
+					System.out.println("delaying a mining request");
+					getContext().getSelf().tell(msg);
 					return Behaviors.same();
 				})
 				.build();
