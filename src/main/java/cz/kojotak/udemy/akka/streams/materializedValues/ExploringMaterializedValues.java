@@ -42,6 +42,12 @@ public class ExploringMaterializedValues {
 					return ++counter;
 				});
 		
+		Sink<Integer, CompletionStage<Integer>> sinkWithSum = Sink
+				.reduce( (first, second)->{
+					System.out.println(second);
+					return first + second;
+				});
+		
 		//defaultni typ materialized value je ze source, tj. NotUsed
 		CompletionStage<Integer> result = source
 				.via(greaterThan200)
