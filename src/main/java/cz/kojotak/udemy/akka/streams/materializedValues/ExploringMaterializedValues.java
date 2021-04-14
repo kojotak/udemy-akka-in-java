@@ -14,6 +14,7 @@ import akka.NotUsed;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.scaladsl.Behaviors;
 import akka.stream.javadsl.Flow;
+import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 
@@ -34,7 +35,30 @@ public class ExploringMaterializedValues {
 		
 		Sink<Integer, CompletionStage<Done>> sink = Sink.foreach(System.out::println);
 		
-		source.via(greaterThan200).via(evenNumber).to(sink).run(ac);
+		//budeme delat pocitadlo jako materialized value
+		Sink<Integer, CompletionStage<Integer>> sinkWithCounter = Sink
+				.fold(0, (counter, value)->{
+					System.out.println(value);
+					return ++counter;
+				});
+		
+		//defaultni typ materialized value je ze source, tj. NotUsed
+		CompletionStage<Integer> result = source
+				.via(greaterThan200)
+				.via(evenNumber)
+				.toMat(sinkWithCounter, //musim pouzit toMat, abych zistal spravny typ materializovaneho value 
+						Keep.right())   //Keep.right() zmeni typ toho, co je materialized value
+				.run(ac);
+		
+		result.whenComplete(
+				(value, throwable)->{
+					if(throwable==null) {
+						System.out.println("Materialized value is " + value);
+					}else {
+						System.out.println("Bad day " + throwable);
+					}
+				}
+				);
 	}
 
 }
