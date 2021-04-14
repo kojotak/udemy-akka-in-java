@@ -57,6 +57,7 @@ public class ExploringMaterializedValues {
 					}else {
 						System.out.println("Bad day " + throwable);
 					}
+					ac.terminate();
 				}
 				);
 	}
