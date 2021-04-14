@@ -1,5 +1,7 @@
 package cz.kojotak.udemy.akka.streams.first;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -25,9 +27,32 @@ public class ExploringFlows {
 					List<Integer> result = List.of(value, value +1, value +2);
 					return result;
 				});
-		Flow<Integer, List<Integer>, NotUsed> groupFlow = Flow.of(Integer.class)
-				.grouped(3); //obracene k mapConcat - seskupi tri elementy do jednoho (listu)
-		Sink<List<Integer>, CompletionStage<Done>> printSink = Sink.foreach(System.out::println);
+		Flow<Integer,Integer, NotUsed> groupFlow = Flow.of(Integer.class)
+				.grouped(3) //obracene k mapConcat - seskupi tri elementy do jednoho (listu)
+		
+//		jedna z variant jak pouzit of(List<Integer>.class) - coz nejde
+//		Flow<IntegerList, Integer, NotUsed> ungroupFlow = Flow.of(IntegerList.class)
+//				.mapConcat( value-> {
+//					return value;
+//				});
+		
+//		taky neni dobry - nepujde namapovat na presny typ v sinku
+//		Flow<List, Integer, NotUsed> ungroupFlow = Flow.of(List.class)
+//				.mapConcat( value-> {
+//					return value;
+//				});
+		
+//		treti zpusob jak vyresit of(List<Integer>.class)
+//		nemusim definovat nove flow, ale muzu se hned napojit metodou na predchozi flow
+				.map(value->{
+				//vytvorim mutable copii, aby list dal pozpatku
+				List<Integer> newList = new ArrayList<>(value);
+				Collections.sort(newList, Collections.reverseOrder());
+				return newList;
+			})
+			.mapConcat( value-> value);
+		
+		Sink<Integer, CompletionStage<Done>> printSink = Sink.foreach(System.out::println);
 		
 		numbers.via(filterFlow).via(mapConcatFlow).via(groupFlow).to(printSink).run(ac);
 	}
