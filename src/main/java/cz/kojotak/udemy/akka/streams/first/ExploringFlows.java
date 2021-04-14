@@ -52,9 +52,12 @@ public class ExploringFlows {
 			})
 			.mapConcat( value-> value);
 		
+		
+		Flow<Integer, Integer, NotUsed> chainedFlow = filterFlow.via(mapConcatFlow);
+		
 		Sink<Integer, CompletionStage<Done>> printSink = Sink.foreach(System.out::println);
 		
-		numbers.via(filterFlow).via(mapConcatFlow).via(groupFlow).to(printSink).run(ac);
+		numbers.via(chainedFlow).via(groupFlow).to(printSink).run(ac);
 	}
 	
 
