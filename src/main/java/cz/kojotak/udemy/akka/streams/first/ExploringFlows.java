@@ -1,5 +1,6 @@
 package cz.kojotak.udemy.akka.streams.first;
 
+import java.util.List;
 import java.util.concurrent.CompletionStage;
 
 import akka.Done;
@@ -19,9 +20,14 @@ public class ExploringFlows {
 				.filter( value-> 
 					value % 17 == 0
 				);
+		Flow<Integer, Integer, NotUsed> mapConcatFlow = Flow.of(Integer.class)
+				.mapConcat( value -> { //trochu jako flatmap - nahradi element seznamem
+					List<Integer> result = List.of(value, value +1, value +2);
+					return result;
+				});
 		Sink<Integer, CompletionStage<Done>> printSink = Sink.foreach(System.out::println);
 		
-		numbers.via(filterFlow).to(printSink).run(ac);
+		numbers.via(filterFlow).via(mapConcatFlow).to(printSink).run(ac);
 	}
 	
 
