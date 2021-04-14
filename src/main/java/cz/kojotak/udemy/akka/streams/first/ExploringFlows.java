@@ -25,9 +25,11 @@ public class ExploringFlows {
 					List<Integer> result = List.of(value, value +1, value +2);
 					return result;
 				});
-		Sink<Integer, CompletionStage<Done>> printSink = Sink.foreach(System.out::println);
+		Flow<Integer, List<Integer>, NotUsed> groupFlow = Flow.of(Integer.class)
+				.grouped(3); //obracene k mapConcat - seskupi tri elementy do jednoho (listu)
+		Sink<List<Integer>, CompletionStage<Done>> printSink = Sink.foreach(System.out::println);
 		
-		numbers.via(filterFlow).via(mapConcatFlow).to(printSink).run(ac);
+		numbers.via(filterFlow).via(mapConcatFlow).via(groupFlow).to(printSink).run(ac);
 	}
 	
 
