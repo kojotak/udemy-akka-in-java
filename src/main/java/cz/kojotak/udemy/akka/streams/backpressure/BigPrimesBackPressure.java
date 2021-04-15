@@ -11,18 +11,20 @@ import akka.Done;
 import akka.NotUsed;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.scaladsl.Behaviors;
+import akka.stream.Attributes;
+import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 
-public class BigPrimesBackPreassure {
+public class BigPrimesBackPressure {
 
 	public static void main(String[] args) {
 		long start = System.currentTimeMillis();
 		ActorSystem ac = ActorSystem.create(Behaviors.empty(), "actorSystem");
 		
-		Source<Integer, NotUsed> source = Source.range(1, 10);
+		Source<Integer, NotUsed> source = Source.range(1, 100);
 		
 		Flow<Integer, BigInteger, NotUsed> toBigInteger = Flow.of(Integer.class)
 				.map( i -> {
@@ -44,10 +46,16 @@ public class BigPrimesBackPreassure {
 		
 		Sink<List<BigInteger>, CompletionStage<Done>> sink = Sink.foreach(System.out::println);
 		
+		
+		//backpressure -> rika upstream casti grafu (=vsechno pred), aby zpomalila
+		
 		CompletionStage<Done> result = source
-			.via(toBigInteger)
+			.via(toBigInteger) //hodne rychla cast, ktera u pomale casti zpusobi bottleneck
+//			.buffer(16, OverflowStrategy.backpressure()) //zvysi defaultni buffer o dalsich 16 -> jednoduchy zpusob backpressure
 			.async()
-			.via(toProbablyPrime) //tohle je pomala cast, takze pred a po dam async, abych to nebrzdil
+//			.buffer(...) //pokud bych dal buffer ZA async.boundary, tak to nebude mit zadny effekt
+			//tohle je pomala cast, takze pred a po dam async (=async.boundary), abych to nebrzdil
+			.via(toProbablyPrime.addAttributes(Attributes.inputBuffer(16, 32))) 
 			.async()
 			.via(toGroups)
 			.toMat(sink, Keep.right())
