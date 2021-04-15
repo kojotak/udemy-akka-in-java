@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import akka.Done;
@@ -36,6 +37,19 @@ public class BigPrimesBackPressure {
 		Flow<BigInteger, BigInteger, NotUsed> toProbablyPrime = Flow.of(BigInteger.class)
 				.map( bi -> bi.nextProbablePrime());
 		
+		//pobezi parallelne
+		Flow<BigInteger, BigInteger, NotUsed> toProbablyPrimeAsync = Flow.of(BigInteger.class)
+				.mapAsyncUnordered(4, //level of paralellism, mapAsync vyzaduje interne vytvoreni CompletableFuture, unordered=jeste o fous rychlejsi nez mapAsync
+						bi ->{
+							CompletableFuture<BigInteger> future = new CompletableFuture<>();
+							future.completeAsync(()->{ //lambda in lambda...
+								BigInteger prime = bi.nextProbablePrime();
+								System.out.println("generated: " + prime);
+								return prime;
+							});
+							return future;
+						});
+		
 		Flow<BigInteger, List<BigInteger>, NotUsed> toGroups = Flow.of(BigInteger.class)
 				.grouped(10)
 				.map( l -> {
@@ -55,7 +69,7 @@ public class BigPrimesBackPressure {
 			.async()
 //			.buffer(...) //pokud bych dal buffer ZA async.boundary, tak to nebude mit zadny effekt
 			//tohle je pomala cast, takze pred a po dam async (=async.boundary), abych to nebrzdil
-			.via(toProbablyPrime.addAttributes(Attributes.inputBuffer(16, 32))) 
+			.via(toProbablyPrimeAsync.addAttributes(Attributes.inputBuffer(16, 32))) 
 			.async()
 			.via(toGroups)
 			.toMat(sink, Keep.right())
