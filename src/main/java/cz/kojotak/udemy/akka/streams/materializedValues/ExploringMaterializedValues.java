@@ -1,11 +1,5 @@
 package cz.kojotak.udemy.akka.streams.materializedValues;
 
-import akka.NotUsed;
-import akka.stream.javadsl.Source;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletionStage;
 
@@ -63,13 +57,15 @@ public class ExploringMaterializedValues {
 					}else {
 						System.out.println("Bad day " + throwable);
 					}
-//					ac.terminate();
+					ac.terminate();
 				}
 				);
-		CompletionStage<Done> result2 = source.toMat(sink, Keep.right()).run(ac);
-		result2.whenComplete( (value,throwable)->{
+		
+		
+//		CompletionStage<Done> result2 = source.toMat(sink, Keep.right()).run(ac);
+//		result2.whenComplete( (value,throwable)->{
 //			ac.terminate();
-		});
+//		});
 	}
 
 }
