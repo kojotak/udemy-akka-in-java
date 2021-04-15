@@ -22,6 +22,9 @@ import akka.stream.javadsl.Source;
 public class ExploringLogging {
 
 	public static void main(String...args) {
+		///! zmenit log level v logback.xml
+		//oproti actors nestaci jen logback.xml, ale je potreba application.conf
+		
 		ActorSystem ac = ActorSystem.create(Behaviors.empty(), "actorSystem");
 		Source<Integer,NotUsed> source = Source.range(1,10);
 		Flow<Integer,Integer,NotUsed> flow = Flow.of(Integer.class)
