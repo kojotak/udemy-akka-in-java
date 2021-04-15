@@ -63,9 +63,13 @@ public class ExploringMaterializedValues {
 					}else {
 						System.out.println("Bad day " + throwable);
 					}
-					ac.terminate();
+//					ac.terminate();
 				}
 				);
+		CompletionStage<Done> result2 = source.toMat(sink, Keep.right()).run(ac);
+		result2.whenComplete( (value,throwable)->{
+//			ac.terminate();
+		});
 	}
 
 }
