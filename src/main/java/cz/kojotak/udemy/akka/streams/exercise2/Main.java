@@ -12,8 +12,11 @@ import java.util.stream.IntStream;
 import akka.NotUsed;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
+import akka.stream.ClosedShape;
 import akka.stream.javadsl.Flow;
+import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Keep;
+import akka.stream.javadsl.RunnableGraph;
 import akka.stream.javadsl.Source;
 import akka.stream.javadsl.Sink;
 
@@ -67,15 +70,24 @@ public class Main {
         
         ActorSystem actors = ActorSystem.create(Behaviors.empty(), "actorSystem");
         
-        CompletionStage<VehicleSpeed> result = source
-        	.via(vehicles)
-        	.async()
-        	.via(positions) //slow
-        	.async()
-        	.via(speeds)
-        	.via(speedLimit)
-        	.toMat(sink, Keep.right())
-        	.run(actors);
+//        CompletionStage<VehicleSpeed> result = source
+//        	.via(vehicles)
+//        	.async()
+//        	.via(positions) //slow
+//        	.async()
+//        	.via(speeds)
+//        	.via(speedLimit)
+//        	.toMat(sink, Keep.right())
+//        	.run(actors);
+        
+//		DSL API
+		RunnableGraph<CompletionStage<VehicleSpeed>> graph =RunnableGraph.fromGraph(
+				GraphDSL.create(
+						sink,
+						(builder, out) -> {
+							return ClosedShape.getInstance();
+						}));
+		CompletionStage<VehicleSpeed> result = graph.run(actors);
          
         result.whenComplete( (value, throwable)->{
         	if(throwable != null) {
