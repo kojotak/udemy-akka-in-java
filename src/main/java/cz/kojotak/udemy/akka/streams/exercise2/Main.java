@@ -13,6 +13,9 @@ import akka.NotUsed;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.stream.ClosedShape;
+import akka.stream.FlowShape;
+import akka.stream.SinkShape;
+import akka.stream.SourceShape;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Keep;
@@ -85,8 +88,28 @@ public class Main {
 				GraphDSL.create(
 						sink,
 						(builder, out) -> {
+							SourceShape<Integer> sourceShape = builder
+									 .add(Source.repeat(42).throttle(1, Duration.ofSeconds(1)));
+							
+							FlowShape<Integer,Integer> vehicleIds = builder.add(vehicles);
+							FlowShape<Integer, VehiclePositionMessage> vehiclePositions = builder.add(positions);
+							FlowShape<VehiclePositionMessage, VehicleSpeed> vehicleSpeeds = builder.add(speeds);
+							FlowShape<VehicleSpeed, VehicleSpeed> vehicleFilter = builder.add(speedLimit);
+							
+							//can do...
+//							SinkShape<VehicleSpeed> vehicleSink = builder.add(sink);
+							//...but we don't need to - out is our shinkshape
+
+							builder.from(sourceShape)
+								.via(vehicleIds)
+								.via(vehiclePositions)
+								.via(vehicleSpeeds)
+								.via(vehicleFilter)
+								.to(out);
+							
 							return ClosedShape.getInstance();
 						}));
+		
 		CompletionStage<VehicleSpeed> result = graph.run(actors);
          
         result.whenComplete( (value, throwable)->{
