@@ -1,4 +1,4 @@
-package cz.kojotak.udemy.akka.streams.exercise2;
+package cz.kojotak.udemy.akka.streams.chapter12;
 
 import java.util.concurrent.CompletionStage;
 
