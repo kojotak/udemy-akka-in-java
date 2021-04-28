@@ -1,4 +1,4 @@
-package cz.kojotak.udemy.akka.streams.transaction;
+package cz.kojotak.udemy.akka.streams.chapter13;
 
 import java.math.BigDecimal;
 import java.time.Duration;
