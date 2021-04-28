@@ -1,17 +1,27 @@
 package cz.kojotak.udemy.akka.streams.transaction;
 
-import akka.NotUsed;
-import akka.stream.javadsl.Flow;
-import akka.stream.javadsl.Source;
-
 import java.math.BigDecimal;
-
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletionStage;
+import java.util.stream.Stream;
 
+import akka.Done;
+import akka.NotUsed;
+import akka.actor.typed.ActorSystem;
+import akka.actor.typed.javadsl.Behaviors;
+import akka.stream.ClosedShape;
+import akka.stream.FanInShape2;
+import akka.stream.javadsl.Flow;
+import akka.stream.javadsl.GraphDSL;
+import akka.stream.javadsl.RunnableGraph;
+import akka.stream.javadsl.Sink;
+import akka.stream.javadsl.Source;
+import akka.stream.javadsl.ZipWith;
 public class Main {
 
 
@@ -26,7 +36,7 @@ public class Main {
         }
 
         //source to generate 1 transaction every second
-        Source<Integer, NotUsed> source = Source.repeat(1).throttle(1, Duration.ofSeconds(10));
+        Source<Integer, NotUsed> source = Source.repeat(1).throttle(1, Duration.ofSeconds(3));
 
         //flow to create a random transfer
         Flow<Integer, Transfer, NotUsed> generateTransfer = Flow.of(Integer.class).map (x -> {
@@ -45,6 +55,35 @@ public class Main {
             return new Transfer(from,to);
         });
 
-
-    }
+        Flow<Transfer, Transaction, NotUsed> getTransactionFromTransfer = Flow.of(Transfer.class)
+        		.mapConcat( transfer -> List.of(transfer.getFrom(), transfer.getTo()));
+        
+        Source<Integer,NotUsed> transactionIdSource = Source.fromIterator(()->	Stream.iterate(1, i->i++).iterator() );
+    
+        RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
+        		GraphDSL.create(Sink.foreach(System.out::println), 
+        				(builder,out)->{
+        					FanInShape2<Transaction, Integer, Transaction> assignTransactionId =
+        							builder.add(ZipWith.create(
+        									(trans,id)->{
+        										trans.setUniqueId(id);
+        										return trans;
+        									}));
+        
+        					builder.from(builder.add(source))
+        							.via(builder.add(generateTransfer))
+        							.via(builder.add(getTransactionFromTransfer))
+        							.toInlet(assignTransactionId.in0());
+        					
+        					builder.from(builder.add(transactionIdSource))
+        							.toInlet(assignTransactionId.in1());
+        					
+        					builder.from(assignTransactionId.out()).to(out);
+        					
+        					return ClosedShape.getInstance();
+        				})
+        		);
+        ActorSystem ac = ActorSystem.create(Behaviors.empty(), "actorSystem");        
+        graph.run(ac);
+   }
 }
