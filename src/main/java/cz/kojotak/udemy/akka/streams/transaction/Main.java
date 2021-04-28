@@ -59,6 +59,10 @@ public class Main {
         		.mapConcat( transfer -> List.of(transfer.getFrom(), transfer.getTo()));
         
         Source<Integer,NotUsed> transactionIdSource = Source.fromIterator(()->	Stream.iterate(1, i->i++).iterator() );
+        
+        Sink<Transfer, CompletionStage<Done>> logger = Sink.foreach( t->{
+        	System.out.println("transfer from " + t.getFrom() + " to " + t.getTo());
+        });
     
         RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
         		GraphDSL.create(Sink.foreach(System.out::println), 
@@ -71,7 +75,7 @@ public class Main {
         									}));
         
         					builder.from(builder.add(source))
-        							.via(builder.add(generateTransfer))
+        							.via(builder.add(generateTransfer.alsoTo(logger))) //tady je pridany navic logger jako dalsi sink
         							.via(builder.add(getTransactionFromTransfer))
         							.toInlet(assignTransactionId.in0());
         					
