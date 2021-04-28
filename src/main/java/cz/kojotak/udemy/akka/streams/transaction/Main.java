@@ -63,6 +63,18 @@ public class Main {
         Sink<Transfer, CompletionStage<Done>> logger = Sink.foreach( t->{
         	System.out.println("transfer from " + t.getFrom() + " to " + t.getTo());
         });
+        
+        Flow<Transaction, Transaction, NotUsed> applyTransactionToAccounts = Flow.of(Transaction.class)
+        		.map( trans -> {
+        			Account acc = accounts.get(trans.getAccountNumber());
+        			acc.addTransaction(trans);
+        			System.out.println("added " + trans + " to " + acc.getId());
+        			return trans;
+        		});
+        
+        Sink<Transaction, CompletionStage<Done>> rejectedTransactions = Sink.foreach( trans ->{
+        	System.out.println("REJECTED trans: " + trans);
+        });
     
         RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
         		GraphDSL.create(Sink.foreach(System.out::println), 
@@ -82,7 +94,18 @@ public class Main {
         					builder.from(builder.add(transactionIdSource))
         							.toInlet(assignTransactionId.in1());
         					
-        					builder.from(assignTransactionId.out()).to(out);
+        					builder
+        						.from(assignTransactionId.out())
+        						.via(builder.add(Flow.of(Transaction.class) //prida flow pro "divert to"
+        								.divertTo(rejectedTransactions, trans->{
+        									Account account = accounts.get(trans.getAccountNumber());
+        									BigDecimal forcastBalance = account.getBalance().add(trans.getAmount());
+        									return forcastBalance.compareTo(BigDecimal.ZERO) < 0;
+        									//true=chci divert, false=chci pokracovat
+        								})
+    								))
+        						.via(builder.add(applyTransactionToAccounts))
+        						.to(out);
         					
         					return ClosedShape.getInstance();
         				})
