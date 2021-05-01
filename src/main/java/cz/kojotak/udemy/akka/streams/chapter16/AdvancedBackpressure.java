@@ -22,6 +22,24 @@ public class AdvancedBackpressure {
 
         Source<Integer, NotUsed> source = Source.fromIterator(() -> Stream.iterate(1, i -> i + 1).iterator())
                 .throttle(5, Duration.ofSeconds(1));
+        
+        Flow<Integer, List, NotUsed> conflateWithSeedFlow = Flow.of(Integer.class)
+        		.conflateWithSeed(
+        				a -> { 
+        					List<Integer> list = new ArrayList<>();
+        					list.add(a);
+        					return list;
+        				}, 
+        				(list, a) -> {
+        					list.add(a);
+        					return list;
+        				}
+    				);
+        
+        Flow<Integer, Integer, NotUsed> conflateFlow = Flow.of(Integer.class)
+        		.conflate( (accumulator, element)->{
+        			return accumulator + element;
+        		});
 
         Flow<Integer, String, NotUsed> flow = Flow.of(Integer.class).map(x -> {
             System.out.println("Flowing " + x);
@@ -30,7 +48,7 @@ public class AdvancedBackpressure {
 
         Sink<String, CompletionStage<Done>> sink = Sink.foreach(x -> System.out.println("Sinking " + x));
 
-        source.via(flow).to(sink).run(actorSystem);
+        source.via(conflateFlow).via(flow).to(sink).run(actorSystem);
         
     }
 }
