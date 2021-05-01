@@ -122,14 +122,16 @@ public class Main {
         	}
 		);
         
-        RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
-        		GraphDSL.create(sinkPartialGraph, (builder,out)->{
-        			builder.from(builder.add(sourcePartialGraph)).to(out);
-        			return ClosedShape.getInstance();
-        		})
-        		);
+//        RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
+//        		GraphDSL.create(sinkPartialGraph, (builder,out)->{
+//        			builder.from(builder.add(sourcePartialGraph)).to(out);
+//        			return ClosedShape.getInstance();
+//        		})
+//        		);
 				        
         ActorSystem ac = ActorSystem.create(Behaviors.empty(), "actorSystem");        
-        graph.run(ac);
-   }
+//        graph.run(ac);
+        Source<Transaction,NotUsed> newSource = Source.fromGraph(sourcePartialGraph);
+        newSource.to(sinkPartialGraph).run(ac);
+   } 
 }
