@@ -12,12 +12,14 @@ import akka.actor.typed.ActorSystem;
 import akka.stream.Attributes;
 import akka.stream.FanInShape2;
 import akka.stream.FlowShape;
+import akka.stream.UniformFanInShape;
 import akka.stream.UniformFanOutShape;
 import akka.stream.javadsl.Broadcast;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Source;
 import akka.stream.javadsl.ZipWith;
 import akka.stream.javadsl.GraphDSL;
+import akka.stream.javadsl.Merge;
 import akka.stream.typed.javadsl.ActorFlow;
 import akka.stream.javadsl.Sink;
 import cz.kojotak.udemy.akka.actors.blockchain.model.Transaction;
@@ -51,18 +53,34 @@ public class Streaming {
 			return block1;
 		});
 		Flow<Block, HashResult, NotUsed> miningProcess = ActorFlow.ask(ac, Duration.ofSeconds(30), (block,self)-> new ManagerBehavior.MineBlockCommand(block, self, 5));
+
+		
+		Source<String, NotUsed> firstHashValue = Source.single("0");
+		
 		Flow<Block, Block, NotUsed> miningFlow = Flow.fromGraph(
 				GraphDSL.create(builder->{
+					UniformFanInShape<String,String> receiveHashes = builder.add(Merge.create(2));
+					FanInShape2<String,Block, Block> applyLastHashBlock = builder.add(ZipWith.create(
+						(hash,block)->{
+							return new Block(hash, block.extractTransactions());
+						}));
 					UniformFanOutShape<Block,Block> broadcast = builder.add(Broadcast.create(2));
 					FlowShape<Block,HashResult> mineBlock = builder.add(miningProcess);
+					UniformFanOutShape<HashResult,HashResult> duplicateHashResult = builder.add(Broadcast.create(2));
 					FanInShape2<Block, HashResult, Block> receivedHashResult = builder.add(ZipWith.create((block,hashResult)->{
 						block.setHash(hashResult.getHash());
 						block.setNonce(hashResult.getNonce());
 						return block;
 					}));
+					builder.from(builder.add(firstHashValue)).viaFanIn(receiveHashes);//TODO ?
+					builder.from(receiveHashes).toInlet(applyLastHashBlock.in0());
+					builder.from(applyLastHashBlock.out()).viaFanOut(broadcast);
 					builder.from(broadcast).toInlet(receivedHashResult.in0());
-					builder.from(broadcast).via(mineBlock).toInlet(receivedHashResult.in1());
-					return FlowShape.of(broadcast.in(), receivedHashResult.out());
+					builder.from(broadcast).via(mineBlock).viaFanOut(duplicateHashResult).toInlet(receivedHashResult.in1());
+					builder.from(duplicateHashResult)
+						.via(builder.add(Flow.of(HashResult.class).map(hr->hr.getHash()))) //convert hashResult to string hash
+						.viaFanIn(receiveHashes);
+					return FlowShape.of(applyLastHashBlock.in1(), receivedHashResult.out());
 				})
 				);
 		Sink<Block,CompletionStage<Done>> sink = Sink.foreach(block->{

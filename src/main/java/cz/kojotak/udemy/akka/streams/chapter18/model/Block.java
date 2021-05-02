@@ -1,5 +1,6 @@
 package cz.kojotak.udemy.akka.streams.chapter18.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cz.kojotak.udemy.akka.actors.blockchain.model.Transaction;
@@ -56,6 +57,10 @@ public class Block {
 		transactions.add(transaction);
 	}
 
+	public List<Transaction> extractTransactions(){
+		return new ArrayList<>(this.transactions);
+	}
+	
 	public int getNonce() {
 		return nonce;
 	}
