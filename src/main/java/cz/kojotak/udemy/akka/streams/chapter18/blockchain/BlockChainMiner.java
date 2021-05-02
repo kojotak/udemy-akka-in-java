@@ -4,10 +4,10 @@ import java.util.concurrent.CompletionStage;
 
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.AskPattern;
+import cz.kojotak.udemy.akka.actors.blockchain.model.BlockValidationException;
 import cz.kojotak.udemy.akka.streams.chapter18.blockchain.ManagerBehavior;
 import cz.kojotak.udemy.akka.streams.chapter18.model.Block;
 import cz.kojotak.udemy.akka.streams.chapter18.model.BlockChain;
-import cz.kojotak.udemy.akka.streams.chapter18.model.BlockValidationException;
 import cz.kojotak.udemy.akka.streams.chapter18.model.HashResult;
 import cz.kojotak.udemy.akka.streams.chapter18.utils.BlocksData;
 

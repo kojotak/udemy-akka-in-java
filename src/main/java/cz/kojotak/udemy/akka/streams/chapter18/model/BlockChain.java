@@ -1,6 +1,8 @@
 package cz.kojotak.udemy.akka.streams.chapter18.model;
 
 import java.util.LinkedList;
+
+import cz.kojotak.udemy.akka.actors.blockchain.model.BlockValidationException;
 import cz.kojotak.udemy.akka.streams.chapter18.utils.BlockChainUtils;
 
 public class BlockChain {
