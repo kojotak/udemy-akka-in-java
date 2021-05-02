@@ -1,7 +1,6 @@
 package cz.kojotak.udemy.akka.streams.chapter18.model;
 
 import java.util.LinkedList;
-
 import cz.kojotak.udemy.akka.streams.chapter18.utils.BlockChainUtils;
 
 public class BlockChain {
@@ -13,6 +12,7 @@ public class BlockChain {
 	}
 	
 	public void addBlock(Block block) throws BlockValidationException {
+
 		String lastHash = "0";
 		
 		if (blocks.size() > 0) {
@@ -20,10 +20,12 @@ public class BlockChain {
 		}
 		
 		if (!lastHash.equals(block.getPreviousHash())) {
+			System.out.println("hashes don't match");
 			throw new BlockValidationException();
 		}
 		
 		if (!BlockChainUtils.validateBlock(block)) {
+			System.out.println("block doesn't validate");
 			throw new BlockValidationException();
 		}
 		
@@ -33,8 +35,10 @@ public class BlockChain {
 	public void printAndValidate() {
 		String lastHash = "0";
 		for (Block block : blocks) {
-			System.out.println("Block " + block.getTransaction().getId() + " ");
-			System.out.println(block.getTransaction());
+			System.out.println("model.Block with trans starting at " + block.getFirstId() + " ");
+			System.out.println(block.getTransactions());
+			System.out.println("Hash " + block.getHash());
+			System.out.println("Lash Hash " + block.getPreviousHash());
 			
 			if (block.getPreviousHash().equals(lastHash)) {
 				System.out.print("Last hash matches ");
@@ -52,11 +56,11 @@ public class BlockChain {
 			
 		}
 	}
-
+	
 	public String getLastHash() {
 		if (blocks.size() > 0)
 			return blocks.getLast().getHash();
-		return null;
+		return "0";
 	}
 
 	public int getSize() {

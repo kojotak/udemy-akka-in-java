@@ -1,6 +1,8 @@
 package cz.kojotak.udemy.akka.streams.chapter18.utils;
 
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import cz.kojotak.udemy.akka.streams.chapter18.model.Block;
 import cz.kojotak.udemy.akka.streams.chapter18.model.Transaction;
@@ -24,8 +26,9 @@ public class BlocksData {
 	public static Block getNextBlock(int id, String lastHash) {
 		
 		Transaction transaction = new Transaction(id, timeStamps[id], customerIds[id], amounts[id]);
-		
-		Block nextBlock = new Block(transaction, lastHash);
+		List<Transaction> transactions = new ArrayList<>();
+		transactions.add(transaction);
+		Block nextBlock = new Block(lastHash, transactions);
 		return nextBlock;
 	}
 	

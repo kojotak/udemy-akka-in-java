@@ -57,8 +57,8 @@ public class WorkerBehavior extends AbstractBehavior<WorkerBehavior.Command> {
 					int nonce = message.getStartNonce();
 					while (!hash.substring(0,message.getDifficulty()).equals(target) && nonce < message.getStartNonce() + 1000) {
 						nonce++;
-						String dataToEncode = message.getBlock().getPreviousHash() + Long.toString(message.getBlock().getTransaction().getTimestamp())
-								+ Integer.toString(nonce) + message.getBlock().getTransaction();
+						String dataToEncode = message.getBlock().getPreviousHash() + Long.toString(message.getBlock().getFirstTimestamp())
+								+ Integer.toString(nonce) + message.getBlock().getTransactions();
 						hash = BlockChainUtils.calculateHash(dataToEncode);
 					}
 
