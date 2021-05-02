@@ -20,10 +20,10 @@ import akka.stream.javadsl.ZipWith;
 import akka.stream.javadsl.GraphDSL;
 import akka.stream.typed.javadsl.ActorFlow;
 import akka.stream.javadsl.Sink;
+import cz.kojotak.udemy.akka.actors.blockchain.model.Transaction;
 import cz.kojotak.udemy.akka.streams.chapter18.model.Block;
 import cz.kojotak.udemy.akka.streams.chapter18.model.BlockChain;
 import cz.kojotak.udemy.akka.streams.chapter18.model.HashResult;
-import cz.kojotak.udemy.akka.streams.chapter18.model.Transaction;
 
 public class Streaming {
 	

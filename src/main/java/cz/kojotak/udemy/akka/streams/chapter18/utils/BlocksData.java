@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import cz.kojotak.udemy.akka.actors.blockchain.model.Transaction;
 import cz.kojotak.udemy.akka.streams.chapter18.model.Block;
-import cz.kojotak.udemy.akka.streams.chapter18.model.Transaction;
 
 public class BlocksData {
 	

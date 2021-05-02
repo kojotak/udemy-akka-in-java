@@ -2,6 +2,8 @@ package cz.kojotak.udemy.akka.streams.chapter18.model;
 
 import java.util.List;
 
+import cz.kojotak.udemy.akka.actors.blockchain.model.Transaction;
+
 public class Block {
 	private String previousHash;
 	private List<Transaction> transactions;
