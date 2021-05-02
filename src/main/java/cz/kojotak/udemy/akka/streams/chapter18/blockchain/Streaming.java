@@ -5,7 +5,11 @@ import java.util.Random;
 
 import akka.NotUsed;
 import akka.actor.typed.ActorSystem;
+import akka.stream.Attributes;
+import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Source;
+import akka.stream.javadsl.Sink;
+import cz.kojotak.udemy.akka.streams.chapter18.model.Block;
 import cz.kojotak.udemy.akka.streams.chapter18.model.Transaction;
 
 public class Streaming {
@@ -21,6 +25,19 @@ public class Streaming {
 					System.out.println("received transaction " + transId);
 					return new Transaction(transId, System.currentTimeMillis(), random.nextInt(1000), random.nextDouble() * 100);
 				});
+		Flow<Transaction,Block,NotUsed> blockBuilder = null;
+		Flow<Block, Block, NotUsed> miningProcess = Flow.of(Block.class).map(block->{
+			System.out.println("starting to mine "  + block.toString() );
+			Thread.sleep(10000);
+			System.out.println("finished to mine "  + block.toString() );
+			return block;
+		});
+		transactionsSource
+			.via(blockBuilder)
+			.via(miningProcess.async().addAttributes(Attributes.inputBuffer(1, 1)))
+			.to(Sink.foreach(System.out::println))
+			.run(ac);
+		
 	}
 
 }
